@@ -8,17 +8,21 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Point {
 	private String id;
+	private String parentId;
 	private String username;
 	private String userId;
 	private Date createdAt;
 	private String message;
+	private int likes;
 	
-	public Point(String id, String username, String userId, Date createdAt, String message) {
-		this.id = id;	
+	public Point(String id, String parentId, String username, String userId, Date createdAt, String message) {
+		this.id = id;
+		this.parentId = parentId;
 		this.username = username;
 		this.userId = userId;
 		this.createdAt = createdAt;
 		this.message = message;
+		this.likes = 0;
 	}
 	
 }

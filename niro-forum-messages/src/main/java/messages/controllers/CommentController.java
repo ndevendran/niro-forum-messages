@@ -1,4 +1,4 @@
-package messages;
+package messages.controllers;
 
 import java.util.List;
 
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.extern.slf4j.Slf4j;
+import messages.Comment;
 import messages.data.CommentRepository;
 
 @Slf4j

@@ -1,4 +1,4 @@
-package messages;
+package messages.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -23,6 +23,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.result.DeleteResult;
 
 import lombok.extern.slf4j.Slf4j;
+import messages.Point;
 import messages.data.PointRepository;
 
 @Slf4j
@@ -53,6 +54,12 @@ public class PointController {
 		return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
 	}
 	
+	@GetMapping("/comment/{id}")
+	public List<Point> commentsByParentId(@PathVariable("id") String id){
+		List<Point> comments = pointRepo.findByParentId(id);
+		return comments;
+	}
+	
 	
 	@PostMapping(consumes="application/json")
 	@ResponseStatus(HttpStatus.CREATED)
@@ -71,5 +78,12 @@ public class PointController {
 		Boolean result = pointRepo.delete(messageId);
 	}
 	
-	
+	@PostMapping(consumes="application/json")
+	@RequestMapping("/like/{id}")
+	public Point likeMessage(@RequestBody Point message) {
+		int likes = message.getLikes();
+		message.setLikes(likes+1);
+		Point updatedMessage = pointRepo.save(message);
+		return updatedMessage;
+	}
 }

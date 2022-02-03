@@ -5,10 +5,13 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import com.mongodb.client.result.DeleteResult;
 
+import messages.Comment;
 import messages.Point;
 
 @Repository
@@ -47,6 +50,14 @@ public class MongoPointRepository implements PointRepository {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public List<Point> findByParentId(String parentId) {
+		Query query = new Query();
+		query.addCriteria(Criteria.where("parentId").is(parentId));
+		List<Point> comments = mongoOps.find(query, Point.class);
+		return comments;
 	}
 
 }
