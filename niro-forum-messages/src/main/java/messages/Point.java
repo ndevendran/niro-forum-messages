@@ -13,7 +13,7 @@ public class Point {
 	private String userId;
 	private Date createdAt;
 	private String message;
-	private int likes;
+	private Likes likes;
 	
 	public Point(String id, String parentId, String username, String userId, Date createdAt, String message) {
 		this.id = id;
@@ -22,7 +22,6 @@ public class Point {
 		this.userId = userId;
 		this.createdAt = createdAt;
 		this.message = message;
-		this.likes = 0;
 	}
 	
 }

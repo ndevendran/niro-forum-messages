@@ -1,9 +1,9 @@
 package messages.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -16,15 +16,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.result.DeleteResult;
-
 import lombok.extern.slf4j.Slf4j;
+import messages.Likes;
 import messages.Point;
+import messages.User;
 import messages.data.PointRepository;
+import messages.data.UserRepository;
+import messages.services.PointMessagingService;
 
 @Slf4j
 @RestController
@@ -32,10 +33,14 @@ import messages.data.PointRepository;
 @RequestMapping("/point")
 public class PointController {
 	private final PointRepository pointRepo;
+	private final UserRepository userRepo;
+	private final PointMessagingService pointMessenger;
 	
 	@Autowired
-	public PointController(PointRepository pointRepo) {
+	public PointController(PointRepository pointRepo, UserRepository userRepo, PointMessagingService jms) {
 		this.pointRepo = pointRepo;
+		this.userRepo = userRepo;
+		this.pointMessenger = jms;
 	}
 	
 	@GetMapping(produces="application/json")
@@ -64,13 +69,25 @@ public class PointController {
 	@PostMapping(consumes="application/json")
 	@ResponseStatus(HttpStatus.CREATED)
 	public Point processMessage(@RequestBody Point message) {
+		List<User> users = new ArrayList<User>();
+		Likes likes = new Likes(message.getId(), users, 0);
+		message.setLikes(likes);
 		Point writtenMessage = pointRepo.save(message);
 		
-		if(writtenMessage != null) {
-			return writtenMessage;
-		}
-		return null;
+		return writtenMessage;
 	}
+	
+	@PostMapping(consumes="application/json",path="/{id}")
+	@ResponseStatus(HttpStatus.CREATED)
+	public Point createComment(@RequestBody Point message, @PathVariable("id") String parentId) {
+		List<User> users = new ArrayList<User>();
+		Likes likes = new Likes(message.getId(), users, 0);
+		message.setLikes(likes);
+		message.setParentId(parentId);
+		Point writtenMessage = pointRepo.save(message);
+		return writtenMessage;
+	}
+	
 	
 	@DeleteMapping("/{messageId}")
 	@ResponseStatus(code=HttpStatus.NO_CONTENT)
@@ -80,10 +97,15 @@ public class PointController {
 	
 	@PostMapping(consumes="application/json")
 	@RequestMapping("/like/{id}")
-	public Point likeMessage(@RequestBody Point message) {
-		int likes = message.getLikes();
-		message.setLikes(likes+1);
-		Point updatedMessage = pointRepo.save(message);
-		return updatedMessage;
+	public Point likeMessage(@RequestBody Point message, @PathVariable("id") String userId) {
+		Likes likes = message.getLikes();
+		User user = userRepo.findById(userId);
+		likes.toggleLikes(user);
+		Update update = new Update();
+		update.set("likes", likes);
+		Query query = new Query();
+		query.addCriteria(Criteria.where("id").is(message.getId()));
+		Point savedMessage = pointRepo.update(query, update);
+		return savedMessage;
 	}
 }

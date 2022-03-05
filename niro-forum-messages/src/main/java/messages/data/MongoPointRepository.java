@@ -7,11 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
 import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 
-import messages.Comment;
 import messages.Point;
 
 @Repository
@@ -58,6 +59,13 @@ public class MongoPointRepository implements PointRepository {
 		query.addCriteria(Criteria.where("parentId").is(parentId));
 		List<Point> comments = mongoOps.find(query, Point.class);
 		return comments;
+	}
+
+	@Override
+	public Point update(Query query, Update update) {
+		mongoOps.upsert(query, update, Point.class);
+		Point updatedMessage = mongoOps.find(query, Point.class).get(0);
+		return updatedMessage;
 	}
 
 }
